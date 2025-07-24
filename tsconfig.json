@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "rootDir": "./src/main",
+    "skipLibCheck": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "es2022",
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/main/**/*.mts", "src/main/**/*.tsx"]
+}
