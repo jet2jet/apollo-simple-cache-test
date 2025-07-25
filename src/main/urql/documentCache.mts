@@ -1,5 +1,6 @@
 import { type ComponentType, type PropsWithChildren } from 'react';
 import { cacheExchange, Client } from 'urql';
+import { PersonsDocument } from '../schema/documents.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
 import { makeClientInitializer, makeComponent } from './common.js';
 
@@ -20,7 +21,14 @@ export function initializeHooks(): [
   name: string,
   component: ComponentType<PropsWithChildren>,
 ] {
-  return ['urql/DocumentCache', makeComponent(getCacheExchange)];
+  return [
+    'urql/DocumentCache',
+    makeComponent(getCacheExchange, (hintDocument) => {
+      return hintDocument === PersonsDocument
+        ? { additionalTypenames: ['Person'] }
+        : undefined;
+    }),
+  ];
 }
 
 export * from './common.js';
