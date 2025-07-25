@@ -84,6 +84,7 @@ async function main() {
     }
   }
 
+  const assignedGlobals = new Set<string>();
   for (const a of allHooks) {
     const name = a[1];
     const Component = a[2];
@@ -114,9 +115,13 @@ async function main() {
               url: 'http://localhost/',
             });
             for (const [name, value] of Object.entries(doc.window)) {
-              if (/^_/.test(name) || name in globalThis) {
+              if (
+                /^_/.test(name) ||
+                (!assignedGlobals.has(name) && name in globalThis)
+              ) {
                 continue;
               }
+              assignedGlobals.add(name);
               (globalThis as Record<string, unknown>)[name] = value;
             }
           },
