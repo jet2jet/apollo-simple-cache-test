@@ -11,7 +11,6 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/postinstall.cjs",
     "benchmark": "tsx --tsconfig tsconfig.json src/main/benchmark.mts",
     "benchmark:proc": "tsx --tsconfig tsconfig.json src/main/benchmark.mts --proc",
     "benchmark:hooks": "tsx --tsconfig tsconfig.json src/main/benchmark.mts --hooks",
