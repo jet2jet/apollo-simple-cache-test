@@ -1,5 +1,5 @@
 import type { ApolloClient } from '@apollo/client';
-import { SimpleDocumentCache } from 'apollo-simple-cache';
+import { SimpleDocumentCache } from 'apollo-simple-cache/v4';
 import { type ComponentType, type PropsWithChildren } from 'react';
 import { PersonsDocument } from '../schema/documents.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
@@ -13,7 +13,7 @@ function makeCache() {
 
 export function initializeProcedures(): [
   name: string,
-  makeClient: () => ApolloClient<unknown>,
+  makeClient: () => ApolloClient,
 ] {
   return ['apollo/SimpleDocumentCache', makeClientInitializer(makeCache)];
 }

@@ -36,7 +36,7 @@ function makeCache() {
 
 export function initializeProcedures(): [
   name: string,
-  makeClient: () => ApolloClient<unknown>,
+  makeClient: () => ApolloClient,
 ] {
   return ['apollo/InMemoryCache', makeClientInitializer(makeCache)];
 }

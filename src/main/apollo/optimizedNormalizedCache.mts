@@ -1,5 +1,5 @@
 import type { ApolloClient } from '@apollo/client';
-import { OptimizedNormalizedCache } from 'apollo-simple-cache';
+import { OptimizedNormalizedCache } from 'apollo-simple-cache/v4';
 import { type ComponentType, type PropsWithChildren } from 'react';
 import { possibleTypes } from '../schema/documents.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
@@ -34,7 +34,7 @@ function makeCache() {
 
 export function initializeProcedures(): [
   name: string,
-  makeClient: () => ApolloClient<unknown>,
+  makeClient: () => ApolloClient,
 ] {
   return ['apollo/OptimizedNormalizedCache', makeClientInitializer(makeCache)];
 }

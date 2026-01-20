@@ -1,14 +1,16 @@
 import {
   ApolloClient,
-  ApolloProvider,
   HttpLink,
-  useApolloClient,
-  useMutation,
-  useQuery,
   type ApolloCache,
   type DocumentNode,
   type TypedDocumentNode,
 } from '@apollo/client';
+import {
+  ApolloProvider,
+  useApolloClient,
+  useMutation,
+  useQuery,
+} from '@apollo/client/react';
 import {
   createContext,
   useCallback,
@@ -21,31 +23,33 @@ import * as commonHooks from '../commonHooks.js';
 import * as commonProcedures from '../commonProcedures.mjs';
 
 export type OnResetCache = (
-  client: ApolloClient<unknown>,
+  client: ApolloClient,
   hintDocument: DocumentNode
 ) => void;
 
 const onResetCacheContext = createContext<OnResetCache | null>(null);
 
-function createClient(
-  makeCache: () => ApolloCache<unknown>
-): ApolloClient<unknown> {
+function createClient(makeCache: () => ApolloCache): ApolloClient {
   const cache = makeCache();
   const link = new HttpLink({ uri: 'http://localhost/graphql' });
   return new ApolloClient({ cache, link });
 }
 
-const queryFn: commonProcedures.QueryFn<ApolloClient<unknown>> = (
+const queryFn: commonProcedures.QueryFn<ApolloClient> = (
   client,
   document,
   variables
 ) => {
   return client
-    .query({ query: document, variables: variables ?? undefined })
-    .then((r) => r.data);
+    .query({
+      query: document,
+      variables: variables ?? undefined,
+      errorPolicy: 'none',
+    })
+    .then((r) => r.data!);
 };
 
-const mutateFn: commonProcedures.MutateFn<ApolloClient<unknown>> = (
+const mutateFn: commonProcedures.MutateFn<ApolloClient> = (
   client,
   document,
   variables
@@ -56,23 +60,20 @@ const mutateFn: commonProcedures.MutateFn<ApolloClient<unknown>> = (
 };
 
 export function makeClientInitializer(
-  makeCache: () => ApolloCache<unknown>
-): () => ApolloClient<unknown> {
+  makeCache: () => ApolloCache
+): () => ApolloClient {
   return () => createClient(makeCache);
 }
 
 export const procedures = Object.fromEntries(
   Object.entries(commonProcedures).map(
     ([name, fn]) =>
-      [
-        name,
-        (client: ApolloClient<unknown>) => fn(client, queryFn, mutateFn),
-      ] as const
+      [name, (client: ApolloClient) => fn(client, queryFn, mutateFn)] as const
   )
 );
 
 export function makeComponent(
-  makeCache: () => ApolloCache<unknown>,
+  makeCache: () => ApolloCache,
   onResetCache: OnResetCache | null = null
 ): ComponentType<PropsWithChildren> {
   return ({ children }) => {
