@@ -1,6 +1,7 @@
 import type { ApolloClient } from '@apollo/client';
 import { SimpleDocumentCache } from 'apollo-simple-cache/v4';
-import { type ComponentType, type PropsWithChildren } from 'react';
+import type { ComponentType } from 'react';
+import type { HookWrapperComponentProps } from '../allHooks.mjs';
 import { PersonsDocument } from '../schema/documents.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
 import { makeClientInitializer, makeComponent } from './common.js';
@@ -20,18 +21,20 @@ export function initializeProcedures(): [
 
 export function initializeHooks(): [
   name: string,
-  component: ComponentType<PropsWithChildren>,
+  component: ComponentType<HookWrapperComponentProps<ApolloClient>>,
+  makeClient: () => ApolloClient,
 ] {
-  return [
-    'apollo/SimpleDocumentCache',
-    makeComponent(makeCache, (client, hintDocument) => {
+  const [component, makeClient] = makeComponent(
+    makeCache,
+    (client, hintDocument) => {
       if (hintDocument === PersonsDocument) {
         client.cache.modify({
           fields: { persons: (_, details) => details.DELETE },
         });
       }
-    }),
-  ];
+    }
+  );
+  return ['apollo/SimpleDocumentCache', component, makeClient];
 }
 
 export * from './common.js';

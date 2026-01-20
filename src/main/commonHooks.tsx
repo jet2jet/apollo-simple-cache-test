@@ -26,7 +26,7 @@ function useCloneData<T>(data: T | undefined): T | undefined {
   return useMemo(() => data && cloneDeep(data), [data]);
 }
 
-export function useSimple(
+export function useHook1Simple(
   useQuery: UseQueryFunction,
   _: UseMutationFunction
 ): boolean {
@@ -37,7 +37,7 @@ export function useSimple(
   return d1 != null && d2 != null;
 }
 
-export function useReadAndCache(
+export function useHook2ReadAndCache(
   useQuery: UseQueryFunction,
   _: UseMutationFunction
 ): boolean {
@@ -48,7 +48,7 @@ export function useReadAndCache(
   return d1 != null && d2 != null;
 }
 
-export function useReadPersonsAndPerson(
+export function useHook3ReadPersonsAndPerson(
   useQuery: UseQueryFunction,
   _: UseMutationFunction
 ): boolean {
@@ -66,7 +66,7 @@ export function useReadPersonsAndPerson(
   return childPersons.every((p) => p);
 }
 
-export function useReadPersonsAndMutatePerson(
+export function useHook4ReadPersonsAndMutatePerson(
   useQuery: UseQueryFunction,
   useMutation: UseMutationFunction
 ): boolean {
@@ -83,3 +83,23 @@ export function useReadPersonsAndMutatePerson(
   }, [data, mutate]);
   return isMutated && data != null && data.persons[0]!.name.endsWith('_Mod');
 }
+
+export function useHook5QueryPerformance(
+  useQuery: UseQueryFunction,
+  _: UseMutationFunction
+): boolean {
+  const personsArray = [...Array<unknown>(1000)].map(() => {
+    // This may be hacky, but the map-call count is constant so there should be no problem
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const data = useQuery(PersonDocument, { id: 0 });
+    return data != null;
+  });
+  return personsArray.every((p) => p);
+}
+useHook5QueryPerformance.usePrefetch = function usePrefetch(
+  useQuery: UseQueryFunction,
+  _: UseMutationFunction
+) {
+  const data = useQuery(PersonDocument, { id: 0 });
+  return data != null;
+};

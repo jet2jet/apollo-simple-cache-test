@@ -3,9 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useMemo,
   type ComponentType,
-  type PropsWithChildren,
 } from 'react';
 import {
   Client,
@@ -18,6 +16,7 @@ import {
   type OperationContext,
   type TypedDocumentNode,
 } from 'urql';
+import type { HookWrapperComponentProps } from '../allHooks.mjs';
 import * as commonHooks from '../commonHooks.js';
 import * as commonProcedures from '../commonProcedures.mjs';
 
@@ -75,21 +74,21 @@ export const procedures = Object.fromEntries(
 export function makeComponent(
   getCacheExchange: () => Exchange,
   getAdditionalMutationOptions: GetAdditionalMutationOptions | null = null
-): ComponentType<PropsWithChildren> {
-  return ({ children }) => {
-    const client = useMemo(() => {
-      return makeClient(getCacheExchange);
-    }, []);
-    return (
-      <Provider value={client}>
-        <getAdditionalMutationOptionsContext.Provider
-          value={getAdditionalMutationOptions}
-        >
-          {children}
-        </getAdditionalMutationOptionsContext.Provider>
-      </Provider>
-    );
-  };
+): [ComponentType<HookWrapperComponentProps<Client>>, () => Client] {
+  return [
+    ({ children, client }) => {
+      return (
+        <Provider value={client}>
+          <getAdditionalMutationOptionsContext.Provider
+            value={getAdditionalMutationOptions}
+          >
+            {children}
+          </getAdditionalMutationOptionsContext.Provider>
+        </Provider>
+      );
+    },
+    () => makeClient(getCacheExchange),
+  ];
 }
 
 const useQueryFn: commonHooks.UseQueryFunction = <
@@ -129,7 +128,11 @@ const useMutationFn: commonHooks.UseMutationFunction = <
 };
 
 export const hooks = Object.fromEntries(
-  Object.entries(commonHooks).map(
-    ([name, fn]) => [name, () => fn(useQueryFn, useMutationFn)] as const
-  )
+  Object.entries(commonHooks).map(([name, fn]) => {
+    const use = () => fn(useQueryFn, useMutationFn);
+    if ('usePrefetch' in fn) {
+      use.usePrefetch = () => fn.usePrefetch(useQueryFn, useMutationFn);
+    }
+    return [name, use] as const;
+  })
 );

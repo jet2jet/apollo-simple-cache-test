@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { JSDOM } from 'jsdom';
+import { createElement } from 'react';
 import { Bench } from 'tinybench';
 import { getAllHooks } from './allHooks.mjs';
 import { getAllProcedures } from './allProcedures.mjs';
@@ -20,6 +21,11 @@ async function main() {
   let promisePause = Promise.resolve();
 
   const isWithGc = process.argv.some((a) => a === '--with-gc');
+  let runProc = process.argv.some((a) => a === '--proc');
+  let runHooks = process.argv.some((a) => a === '--hooks');
+  if (!runProc && !runHooks) {
+    runProc = runHooks = true;
+  }
 
   if (isWithGc) {
     console.log(
@@ -39,8 +45,8 @@ async function main() {
     });
   }
 
-  const allProcedures = getAllProcedures();
-  const allHooks = getAllHooks();
+  const allProcedures = runProc ? getAllProcedures() : [];
+  const allHooks = runHooks ? getAllHooks() : [];
   const bench = new Bench({ time: 10 });
   server.listen();
 
@@ -49,7 +55,7 @@ async function main() {
 
   const versionInfoSet = new Set<string>();
 
-  for (const a of allProcedures) {
+  for (const a of runProc ? allProcedures : allHooks) {
     const versionInfo = a[0];
     versionInfoSet.add(versionInfo);
   }
@@ -88,15 +94,19 @@ async function main() {
   for (const a of allHooks) {
     const name = a[1];
     const Component = a[2];
-    const hooks = a[3];
+    const makeClient = a[3];
+    const hooks = a[4];
     for (const h of hooks) {
       const fnName = h[0];
       const use = h[1];
       bench.add(
         `hook:${name}:${fnName}`,
         async () => {
+          const client = (globalThis as Record<string, unknown>)
+            .__client as object;
           const { result } = renderHook(() => use(), {
-            wrapper: Component,
+            wrapper: ({ children }) =>
+              createElement(Component, { client }, children),
           });
           await waitFor(() => {
             if (!result.current) {
@@ -109,7 +119,7 @@ async function main() {
             await promisePause;
             await waitMicrotask();
           },
-          beforeEach: () => {
+          beforeEach: async () => {
             resetPersonData();
             const doc = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
               url: 'http://localhost/',
@@ -123,6 +133,20 @@ async function main() {
               }
               assignedGlobals.add(name);
               (globalThis as Record<string, unknown>)[name] = value;
+            }
+            const client = makeClient();
+            (globalThis as Record<string, unknown>).__client = client;
+            if (use.usePrefetch != null) {
+              const usePrefetch = use.usePrefetch;
+              const hookData = renderHook(() => usePrefetch(), {
+                wrapper: ({ children }) =>
+                  createElement(Component, { client }, children),
+              });
+              await waitFor(() => {
+                if (!hookData.result.current) {
+                  throw new Error('Pending');
+                }
+              });
             }
           },
           afterEach: () => {

@@ -1,6 +1,7 @@
 import type { ApolloClient } from '@apollo/client';
 import { OptimizedNormalizedCache } from 'apollo-simple-cache/v4';
-import { type ComponentType, type PropsWithChildren } from 'react';
+import type { ComponentType } from 'react';
+import type { HookWrapperComponentProps } from '../allHooks.mjs';
 import { possibleTypes } from '../schema/documents.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
 import { makeClientInitializer, makeComponent } from './common.js';
@@ -41,9 +42,11 @@ export function initializeProcedures(): [
 
 export function initializeHooks(): [
   name: string,
-  component: ComponentType<PropsWithChildren>,
+  component: ComponentType<HookWrapperComponentProps<ApolloClient>>,
+  makeClient: () => ApolloClient,
 ] {
-  return ['apollo/OptimizedNormalizedCache', makeComponent(makeCache)];
+  const [component, makeClient] = makeComponent(makeCache);
+  return ['apollo/OptimizedNormalizedCache', component, makeClient];
 }
 
 export * from './common.js';

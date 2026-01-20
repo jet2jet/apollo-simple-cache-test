@@ -5,37 +5,44 @@ import * as ApolloSimpleDocumentCache from './apollo/simpleDocumentCache.mjs';
 import * as UrqlDocumentCache from './urql/documentCache.mjs';
 import * as UrqlNormalizedCache from './urql/normalizedCache.mjs';
 
-export type HookType = () => boolean;
+export type HookType = {
+  (): boolean;
+  usePrefetch?: () => boolean;
+};
+export type HookWrapperComponentProps<C extends object> = PropsWithChildren<{
+  client: C;
+}>;
 export type AllHooks = Array<
   [
     versionInfo: string,
     name: string,
-    component: ComponentType<PropsWithChildren>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component: ComponentType<HookWrapperComponentProps<any>>,
+    makeClient: () => object,
     hooks: Array<[name: string, fn: HookType]>,
   ]
 >;
 
-type HooksInitializer = () => [
+type HooksInitializer<C extends object> = () => [
   name: string,
-  component: ComponentType<PropsWithChildren>,
+  component: ComponentType<HookWrapperComponentProps<C>>,
+  makeClient: () => C,
 ];
 
-function registerHooks(
+function registerHooks<C extends object>(
   out: AllHooks,
   mod: {
     versionInfo: string;
-    initializeHooks: HooksInitializer;
+    initializeHooks: HooksInitializer<C>;
     hooks: Record<string, HookType>;
   }
 ) {
-  const [name, component] = mod.initializeHooks();
+  const [name, component, makeClient] = mod.initializeHooks();
   const hooks: Array<[name: string, fn: HookType]> = [];
-  for (const [fnName, fn] of Object.entries<HooksInitializer | HookType>(
-    mod.hooks
-  )) {
-    hooks.push([fnName, fn as HookType]);
+  for (const [fnName, fn] of Object.entries<HookType>(mod.hooks)) {
+    hooks.push([fnName, fn]);
   }
-  out.push([mod.versionInfo, name, component, hooks]);
+  out.push([mod.versionInfo, name, component, makeClient, hooks]);
 }
 
 export function getAllHooks(): AllHooks {

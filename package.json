@@ -13,6 +13,8 @@
   "scripts": {
     "postinstall": "node scripts/postinstall.cjs",
     "benchmark": "tsx --tsconfig tsconfig.json src/main/benchmark.mts",
+    "benchmark:proc": "tsx --tsconfig tsconfig.json src/main/benchmark.mts --proc",
+    "benchmark:hooks": "tsx --tsconfig tsconfig.json src/main/benchmark.mts --hooks",
     "benchmark:with-gc": "tsx --tsconfig tsconfig.json --expose-gc src/main/benchmark.mts --with-gc",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix",

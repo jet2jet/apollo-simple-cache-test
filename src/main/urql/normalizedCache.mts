@@ -1,6 +1,7 @@
 import { cacheExchange } from '@urql/exchange-graphcache';
-import { type ComponentType, type PropsWithChildren } from 'react';
+import type { ComponentType } from 'react';
 import type { Client } from 'urql';
+import type { HookWrapperComponentProps } from '../allHooks.mjs';
 import { introspectionData } from '../schema/schema.mjs';
 import getPackageVersion from '../utils/getPackageVersion.mjs';
 import { makeClientInitializer, makeComponent } from './common.js';
@@ -30,9 +31,11 @@ export function initializeProcedures(): [
 
 export function initializeHooks(): [
   name: string,
-  component: ComponentType<PropsWithChildren>,
+  component: ComponentType<HookWrapperComponentProps<Client>>,
+  makeClient: () => Client,
 ] {
-  return ['urql/NormalizedCache', makeComponent(getCacheExchange)];
+  const [component, makeClient] = makeComponent(getCacheExchange);
+  return ['urql/NormalizedCache', component, makeClient];
 }
 
 export * from './common.js';
